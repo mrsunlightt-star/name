@@ -19,6 +19,10 @@ label{font-weight:600}
 input,select,button{font:inherit}
 input,select{padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{background:#fff;border:1px solid var(--border);color:var(--muted);border-radius:999px;padding:8px 12px}
+.chips button:hover{background:#f8fafc;color:#334155}
+.chips button.active{background:#eaf3ff;border-color:#93c5fd;color:#1e40af;box-shadow:0 0 0 2px rgba(147,197,253,.6) inset}
+.chips button:focus{outline:2px solid #bfdbfe}
 .actions{grid-column:1/-1;display:flex;gap:12px;align-items:center;margin-top:12px}
 .actions-top{grid-column:1/-1;display:flex;gap:12px;align-items:center}
 .actions-bottom{grid-column:1/-1;margin-top:12px;display:flex;gap:12px}

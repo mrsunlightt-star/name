@@ -32,7 +32,36 @@ function toPinyin(name){return name.split('').map(ch=>charPinyin[ch]||ch).join('
 function surnameInfo(s){const m={'李':{origin:'出自嬴姓与姬姓等多源，广泛分布',meaning:'李字寓意木子成熟，象征丰收',figure:'李白，盛唐诗人，浪漫主义代表'},'王':{origin:'源自姬姓，封王者后裔，姓氏人口最多之一',meaning:'王寓意尊贵与领导力',figure:'王羲之，东晋书法家，行草典范'},'张':{origin:'源自姬姓，弓长为张，武职起家',meaning:'张寓意开张、展开',figure:'张仲景，医圣，著《伤寒杂病论》'},'刘':{origin:'源自祁姓，汉高祖刘邦后裔广布',meaning:'刘寓意勇武与豪迈',figure:'刘备，蜀汉帝，仁义名著'},'林':{origin:'比干之后为林氏，亦有居于林为氏',meaning:'林寓意生机与自然',figure:'林则徐，近代政治家，虎门销烟'}};return m[s]||{origin:'常见汉族姓氏之一，历史悠久',meaning:'寓意积极向上',figure:'历史人物众多，可参考百科条目'}}
 function guessStyleFromName(n){if(!n)return null;const s=n.toLowerCase();if(/[xzkwv]/.test(s))return 'powerful';if(/[leaioy]/.test(s))return 'gentle';if(/[mnr]/.test(s))return 'elegant';return 'modern'}
 function localGenerate({age,genders,styles,surname,count,yourName}){const chosenSurname=(toChineseSurname(surname)||'')||pick(commonSurnames,1)[0];const styleId=styles[0]||guessStyleFromName(yourName)||styleCatalog[Math.floor(Math.random()*styleCatalog.length)].id;const styleDef=styleCatalog.find(s=>s.id===styleId)||styleCatalog[0];const pool=styleDef.chars;const res=[];for(let i=0;i<count;i++){const first=pick(pool,1)[0];const second=pick(pool.filter(c=>c!==first),1)[0];const full=chosenSurname+first+second;res.push({name:full,pinyin:toPinyin(full),style:currentLang==='en'?styleDef.en:styleDef.zh,meaning:currentLang==='en'?styleDef.descEn:styleDef.descZh,surname:chosenSurname,surnameInfo:surnameInfo(chosenSurname)})}return res}
-async function callProvider(payload){const r=await fetch(`${API_BASE}/api/zhipu/generate`,{method:'POST',headers:{'Content-Type':'application/json','X-Member':(localStorage.getItem('member')==='true'?'true':'false')},body:JSON.stringify(payload)});if(!r.ok) throw new Error('upstream_'+r.status);const text=await r.text();let data;try{data=JSON.parse(text)}catch(e){throw new Error('invalid_json')}if(!Array.isArray(data) || !data.length) throw new Error('empty');return data}
+async function callProvider(payload){
+  const r=await fetch(`${API_BASE}/api/generate`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-Member':(localStorage.getItem('member')==='true'?'true':'false')},
+    body:JSON.stringify(payload)
+  })
+  if(!r.ok) throw new Error('upstream_'+r.status)
+  const text=await r.text()
+  let j
+  try{j=JSON.parse(text)}catch(e){throw new Error('invalid_json')}
+  let arr=[]
+  if(Array.isArray(j)){
+    arr=j
+  }else if(j && j.data){
+    arr=Array.isArray(j.data)?j.data:[j.data]
+  }else if(j && j.series && j.series.result){
+    const res=j.series.result
+    const d=res.data!==undefined?res.data:res
+    arr=Array.isArray(d)?d:[d]
+  }
+  arr=arr.map(it=>({
+    name: it.name||'',
+    pinyin: toPinyin(it.name||''),
+    style: it.style||'Modern & Minimal',
+    meaning: it.meaning||'',
+    surnameInfo: {story: it.story||''}
+  }))
+  if(!arr.length) throw new Error('empty')
+  return arr
+}
 function speak(text){const ttsSel=document.getElementById('tts').value;const zhRegex=/^[\u4e00-\u9fa5·]{1,6}$/;if(ttsSel==='browser'){try{const u=new SpeechSynthesisUtterance(text);u.lang='zh-CN';speechSynthesis.speak(u)}catch(e){}return}if(ttsSel==='baidu'&&!zhRegex.test(text)){try{const u=new SpeechSynthesisUtterance(text);u.lang='zh-CN';speechSynthesis.speak(u)}catch(e){}return}const per=0;const spd=4;fetch(`${API_BASE}/api/tts?provider=${encodeURIComponent(ttsSel)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,lang:'zh-CN',per,spd})}).then(r=>r.ok?r.blob():Promise.reject('tts error')).then(blob=>{const url=URL.createObjectURL(blob);const audio=new Audio(url);audio.play()}).catch(()=>{try{const u=new SpeechSynthesisUtterance(text);u.lang='zh-CN';speechSynthesis.speak(text)}catch(e){}})}
 function renderCalligraphy(canvas,text,font,px=64,sx=1){const dpr=window.devicePixelRatio||1;const w=canvas.clientWidth;const h=canvas.clientHeight;canvas.width=w*dpr;canvas.height=h*dpr;const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);ctx.fillStyle='#fafafa';ctx.fillRect(0,0,w,h);ctx.fillStyle='#0f172a';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`${px}px "${font}"`;ctx.save();ctx.translate(w/2,h/2);ctx.scale(sx,1);ctx.fillText(text,0,0);ctx.restore()}
 let fontsReady=false;let fontKai='Noto Serif SC';let fontXing='Ma Shan Zheng';function ensureFonts(){if(fontsReady) return Promise.resolve();const kai=document.fonts.load('72px "'+fontKai+'"');const xing=document.fonts.load('72px "'+fontXing+'"');return Promise.all([kai,xing]).then(()=>{fontsReady=true}).catch(()=>{fontsReady=true})}
@@ -60,4 +89,13 @@ function toChineseSurname(input){if(!input)return '';const map={lin:'林',wang:'
 if(surpriseBtn){surpriseBtn.addEventListener('click',async()=>{const count=2;const data=await callProvider({genders:[],styles:[],count,lang:currentLang});cards.innerHTML='';data.forEach(d=>cards.appendChild(createCard(d)))})}
 function normalizeText(s){return String(s||'').toLowerCase().trim()}
 function resolveStyleId(txt){const v=normalizeText(txt);const names={};Object.keys(i18nTexts).forEach(lang=>{const sn=i18nTexts[lang].styleNames||{};Object.keys(sn).forEach(id=>{if(!names[id]) names[id]=[];names[id].push(normalizeText(sn[id]))})});styleCatalog.forEach(s=>{if(!names[s.id]) names[s.id]=[];names[s.id].push(normalizeText(s.en));names[s.id].push(normalizeText(s.zh))});for(const id in names){if(names[id].some(x=>x===v)) return id}return 'modern'}
-async function refreshMemberUI(){try{const r=await fetch(`${API_BASE}/api/member/status`);const j=await r.json();const isMember=j.member;localStorage.setItem('member', isMember?'true':'false');[...cards.querySelectorAll('.actions-row button[data-role="export"], .actions-row button[data-role="share"]')].forEach(b=>{b.disabled=!isMember; b.title=!isMember? (i18nTexts[currentLang].subscribe||'Subscribe (Member)') : ''})}catch(e){}}
+async function refreshMemberUI(){
+  try{
+    const r=await fetch(`${API_BASE}/api/member/status`)
+    const j=await r.json()
+    const isMember=(j.is_member!==undefined?j.is_member:j.member)!==undefined? (j.is_member||j.member) : (j.series&&j.series.result&&j.series.result.is_member||false)
+    localStorage.setItem('member', isMember?'true':'false')
+    ;[...cards.querySelectorAll('.actions-row button[data-role="export"], .actions-row button[data-role="share"]')]
+      .forEach(b=>{b.disabled=!isMember; b.title=!isMember? (i18nTexts[currentLang].subscribe||'Subscribe (Member)') : ''})
+  }catch(e){}
+}
