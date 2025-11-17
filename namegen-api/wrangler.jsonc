@@ -12,7 +12,7 @@
   }
   ,
   "vars": {
-    "ALLOWED_ORIGIN": "*"
+    "ALLOWED_ORIGIN": "https://name-5ns.pages.dev"
   }
 	/**
 	 * Smart Placement

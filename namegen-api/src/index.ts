@@ -20,7 +20,7 @@ app.options("*", (c) => {
     headers: {
       "Access-Control-Allow-Origin": allowed === "*" ? origin : allowed,
       "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type,Authorization",
+      "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Member",
       "Access-Control-Max-Age": "86400",
     },
   });
@@ -32,7 +32,7 @@ app.use("*", async (c, next) => {
   const origin = c.req.header("origin") || "*";
   c.header("Access-Control-Allow-Origin", allowed === "*" ? origin : allowed);
   c.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  c.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  c.header("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Member");
   c.header("Access-Control-Allow-Credentials", "true");
 });
 
@@ -51,6 +51,7 @@ openapi.get("/api/debug/status", DebugStatus);
 openapi.get("/api/member/status", MemberStatus);
 openapi.post("/api/member/activate", MemberActivate);
 openapi.post("/api/generate", GenerateName);
+openapi.post("/api/zhipu/generate", GenerateName);
 
 // You may also register routes for non OpenAPI directly on Hono
 // app.get('/test', (c) => c.text('Hono!'))
