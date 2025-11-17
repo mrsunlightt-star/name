@@ -1,0 +1,955 @@
+const genderChipGroup=document.getElementById('genders');
+const styleChipGroup=document.getElementById('styles');
+const form=document.getElementById('form');
+const cards=document.getElementById('cards');
+const langSelect=document.getElementById('lang');
+const subscribeBtn=document.getElementById('subscribe');
+const surnameChips=document.getElementById('surnameChips');
+const surpriseBtn=document.getElementById('surprise');
+if(navigator.connection&&navigator.connection.saveData){document.body.classList.add('save-data')}
+try{const qs=new URLSearchParams(window.location.search);const m=qs.get('member');if(m==='true'){localStorage.setItem('member','true')}if(m==='false'){localStorage.removeItem('member')}}catch(e){}
+const i18nTexts={
+  en:{
+    logo:'Chinese Name Studio',
+    subtitle:'A name, a culture, a poetic bond of heritage and serendipity',
+    fill:'Fill Your Preferences',
+    age:'Age',
+    gender:'Gender (single-select)',
+    style:'Name style',
+    surname:'Surname (optional)',
+    count:'Quantity',
+    generate:'Generate',
+    note:'Note: Local generator by default. DeepSeek or ERNIE Bot requires server API keys.',
+    results:'Name Candidates',
+    copyAll:'Copy All',
+    exportAll:'Export Posters',
+    footer:'Tip: Use card buttons to play pronunciation, download calligraphy images, or copy content.',
+    name:'Name',
+    pinyin:'Pinyin',
+    styleLabel:'Style',
+    meaningLabel:'Meaning',
+    surnameStory:'Surname Story',
+    play:'Play Pronunciation',
+    copy:'Copy',
+    exportCard:'Export Card Image',
+    share:'Share',
+    dlKai:'Download Kaishu',
+    dlXing:'Download Xingshu',
+    fontNote:'Calligraphy font: Ma Shan Zheng (handwritten, local)',
+    languageLabel:'Language',
+    yourNameLabel:'Your name (optional)',
+    genderFemale:'Female',
+    genderMale:'Male',
+    genderNonbinary:'Non-binary',
+    surprise:'Surprise me (Auto)',
+    subscribe:'Subscribe (Member)',
+    ttsBrowser:'Online TTS (Browser)',
+    ttsBaidu:'Baidu TTS'
+    ,membershipNote:'Members: unlimited generations. Non-members: limited daily usage.'
+    ,loadingTip:'Your name is being crafted with cultural care. Please wait…'
+  },
+  zh:{
+    logo:'中文姓名定制',
+    subtitle:'A name, a culture, a poetic bond of heritage and serendipity',
+    fill:'填写需求',
+    age:'年龄',
+    gender:'性别（单选）',
+    style:'名字风格',
+    surname:'姓氏（可选）',
+    count:'生成数量',
+    generate:'生成中文名字',
+    note:'说明：默认使用本地生成。选择 DeepSeek 或文心一言需要在后端配置 API Key。',
+    results:'候选名字',
+    copyAll:'一键复制全部',
+    exportAll:'导出海报图片',
+    footer:'提示：点击卡片中的按钮可播放发音、下载书法图片或复制内容。',
+    name:'名字',
+    pinyin:'拼音',
+    styleLabel:'风格',
+    meaningLabel:'寓意',
+    surnameStory:'姓氏故事',
+    play:'播放发音',
+    copy:'复制',
+    exportCard:'导出卡片图片',
+    share:'分享',
+    dlKai:'下载楷书',
+    dlXing:'下载行书',
+    fontNote:'书法字体：Ma Shan Zheng（手写风格，本地）',
+    languageLabel:'语言',
+    yourNameLabel:'你的名字（可选）',
+    genderFemale:'女性',
+    genderMale:'男性',
+    genderNonbinary:'非二元',
+    surprise:'智能推荐',
+    subscribe:'订阅（会员）',
+    ttsBrowser:'在线发音（浏览器）',
+    ttsBaidu:'百度发音（云端）'
+    ,membershipNote:'会员：不限次生成；非会员：每日使用有限制。'
+    ,loadingTip:'您的专属中文名字正在由我们的文化顾问精心雕琢，请稍候片刻…'
+  }
+  ,de:{
+    logo:'Studio für chinesische Namen',
+    subtitle:'Personalisierte, kulturell fundierte chinesische Namen',
+    fill:'Präferenzen ausfüllen',
+    age:'Alter',
+    gender:'Geschlecht (Einzelauswahl)',
+    style:'Namensstil',
+    surname:'Nachname (optional)',
+    count:'Anzahl',
+    generate:'Generieren',
+    note:'Hinweis: Standard ist lokaler Generator. Zhipu GLM-4.5-Flash benötigt Server-Proxy und API-Schlüssel.',
+    results:'Namensvorschläge',
+    copyAll:'Alle kopieren',
+    exportAll:'Poster exportieren',
+    footer:'Tipp: Über die Karten-Buttons Aussprache abspielen, Kalligraphie laden oder kopieren.',
+    name:'Name',
+    pinyin:'Pinyin',
+    styleLabel:'Stil',
+    meaningLabel:'Bedeutung',
+    surnameStory:'Nachnamen-Geschichte',
+    play:'Aussprache abspielen',
+    copy:'Kopieren',
+    exportCard:'Kartenbild exportieren',
+    share:'Teilen',
+    dlKai:'Kaishu herunterladen',
+    dlXing:'Xingshu herunterladen',
+    fontNote:'Kalligraphie-Schrift: Ma Shan Zheng (handgeschrieben)',
+    languageLabel:'Sprache',
+    surprise:'Automatisch vorschlagen',
+    subscribe:'Abonnieren (Mitglied)',
+    ttsBrowser:'Online TTS (Browser)',
+    ttsBaidu:'Baidu TTS',
+    yourNameLabel:'Ihr Name (optional)',
+    genderFemale:'Weiblich',
+    genderMale:'Männlich',
+    genderNonbinary:'Nicht-binär',
+    styleNames:{
+      elegant:'Elegant & Literarisch',
+      gentle:'Sanft & Warm',
+      powerful:'Kraftvoll & Majestätisch',
+      scholarly:'Gelehrt & Klassisch',
+      modern:'Modern & Minimal',
+      nature:'Naturinspiriert',
+      bright:'Fröhlich & Hell',
+      classic:'Klassisch & Traditionell'
+    },
+    membershipNote:'Mitglieder: unbegrenzte Generierungen. Nicht‑Mitglieder: tägliche Nutzung begrenzt.'
+    ,loadingTip:'Ihr Name wird mit kultureller Sorgfalt gestaltet. Bitte warten…'
+  },
+  ru:{
+    logo:'Студия китайских имён',
+    subtitle:'Индивидуальные, культурно осмысленные китайские имена',
+    fill:'Заполните предпочтения',
+    age:'Возраст',
+    gender:'Пол (одиночный выбор)',
+    style:'Стиль имени',
+    surname:'Фамилия (необязательно)',
+    count:'Количество',
+    generate:'Сгенерировать',
+    note:'Примечание: По умолчанию локальный генератор. Zhipu GLM-4.5-Flash требует серверный прокси и API-ключ.',
+    results:'Варианты имён',
+    copyAll:'Копировать всё',
+    exportAll:'Экспорт постеров',
+    footer:'Совет: кнопки карточки — воспроизведение произношения, загрузка каллиграфии, копирование.',
+    name:'Имя',
+    pinyin:'Пиньинь',
+    styleLabel:'Стиль',
+    meaningLabel:'Значение',
+    surnameStory:'История фамилии',
+    play:'Воспроизвести произношение',
+    copy:'Копировать',
+    exportCard:'Экспорт изображения карточки',
+    share:'Поделиться',
+    dlKai:'Скачать кайшу',
+    dlXing:'Скачать синшу',
+    fontNote:'Каллиграфический шрифт: Ma Shan Zheng',
+    languageLabel:'Язык',
+    surprise:'Авто‑подбор',
+    subscribe:'Подписка (для участников)',
+    ttsBrowser:'Онлайн TTS (браузер)',
+    ttsBaidu:'Baidu TTS',
+    yourNameLabel:'Ваше имя (необязательно)',
+    genderFemale:'Женский',
+    genderMale:'Мужской',
+    genderNonbinary:'Небинарный',
+    styleNames:{
+      elegant:'Элегантный и литературный',
+      gentle:'Мягкий и тёплый',
+      powerful:'Мощный и величественный',
+      scholarly:'Учёный и классический',
+      modern:'Современный и минимальный',
+      nature:'Вдохновлён природой',
+      bright:'Яркий и радостный',
+      classic:'Классический и традиционный'
+    },
+    membershipNote:'Для участников: без ограничений. Для гостей: дневной лимит.'
+    ,loadingTip:'Ваше имя создаётся с культурной заботой. Пожалуйста, подождите…'
+  },
+  ja:{
+    logo:'中国語の名前スタジオ',
+    subtitle:'文化的背景に根ざした、あなただけの中国語名',
+    fill:'希望を入力',
+    age:'年齢',
+    gender:'性別（単一選択）',
+    style:'名前スタイル',
+    surname:'姓（任意）',
+    count:'数量',
+    generate:'生成',
+    note:'注意：既定はローカル生成。Zhipu GLM-4.5-Flash はサーバープロキシと API キーが必要です。',
+    results:'候補名',
+    copyAll:'すべてコピー',
+    exportAll:'ポスター出力',
+    footer:'ヒント：カードのボタンで発音再生、書法画像のダウンロード、内容コピーができます。',
+    name:'名前',
+    pinyin:'ピンイン',
+    styleLabel:'スタイル',
+    meaningLabel:'意味',
+    surnameStory:'姓の物語',
+    play:'発音を再生',
+    copy:'コピー',
+    exportCard:'カード画像を出力',
+    share:'共有する',
+    dlKai:'楷書をダウンロード',
+    dlXing:'行書をダウンロード',
+    fontNote:'書法フォント：Ma Shan Zheng（手書き）',
+    languageLabel:'言語',
+    surprise:'自動おすすめ',
+    subscribe:'購読（メンバー）',
+    ttsBrowser:'オンライン TTS（ブラウザ）',
+    ttsBaidu:'Baidu TTS',
+    yourNameLabel:'お名前（任意）',
+    genderFemale:'女性',
+    genderMale:'男性',
+    genderNonbinary:'ノンバイナリー',
+    styleNames:{
+      elegant:'優雅・文芸風',
+      gentle:'柔らかく温かい',
+      powerful:'力強く荘厳',
+      scholarly:'学術的・古典的',
+      modern:'モダン・ミニマル',
+      nature:'自然を感じる',
+      bright:'明るく快活',
+      classic:'クラシック・伝統的'
+    },
+    membershipNote:'メンバー：無制限。非メンバー：1日の利用に制限あり。'
+    ,loadingTip:'文化の背景を大切に、あなたの名前を丁寧に作成中です。少々お待ちください…'
+  },
+  ko:{
+    logo:'중국어 이름 스튜디오',
+    subtitle:'문화적 맥락을 담은 맞춤 중국어 이름',
+    fill:'선호 항목 입력',
+    age:'나이',
+    gender:'성별(단일 선택)',
+    style:'이름 스타일',
+    surname:'성(선택)',
+    count:'수량',
+    generate:'생성',
+    note:'참고: 기본은 로컬 생성. Zhipu GLM-4.5-Flash는 서버 프록시와 API 키가 필요합니다.',
+    results:'이름 후보',
+    copyAll:'모두 복사',
+    exportAll:'포스터 내보내기',
+    footer:'팁: 카드 버튼으로 발음 재생, 서체 이미지 다운로드, 내용 복사가 가능합니다.',
+    name:'이름',
+    pinyin:'병음',
+    styleLabel:'스타일',
+    meaningLabel:'의미',
+    surnameStory:'성씨 이야기',
+    play:'발음 재생',
+    copy:'복사',
+    exportCard:'카드 이미지 내보내기',
+    share:'공유',
+    dlKai:'해서 다운로드',
+    dlXing:'행서 다운로드',
+    fontNote:'서체: Ma Shan Zheng (손글씨)',
+    languageLabel:'언어',
+    surprise:'자동 추천',
+    subscribe:'구독(회원)',
+    ttsBrowser:'온라인 TTS(브라우저)',
+    ttsBaidu:'Baidu TTS',
+    yourNameLabel:'이름 (선택)',
+    genderFemale:'여성',
+    genderMale:'남성',
+    genderNonbinary:'논바이너리',
+    styleNames:{
+      elegant:'우아하고 문학적',
+      gentle:'부드럽고 따뜻한',
+      powerful:'강력하고 장엄한',
+      scholarly:'학구적·고전적',
+      modern:'모던·미니멀',
+      nature:'자연 영감',
+      bright:'밝고 경쾌한',
+      classic:'고전적·전통적'
+    },
+    membershipNote:'회원: 무제한 생성. 비회원: 일일 이용 제한.'
+    ,loadingTip:'문화적 맥락을 담아 이름을 정성스럽게 만드는 중입니다. 잠시만 기다려주세요…'
+  }
+  ,fr:{
+    logo:'Studio de noms chinois',
+    subtitle:'Des noms chinois personnalisés, ancrés dans la culture',
+    fill:'Remplissez vos préférences',
+    age:'Âge',
+    gender:'Genre (sélection unique)',
+    style:'Style du nom',
+    surname:'Nom de famille (optionnel)',
+    count:'Quantité',
+    generate:'Générer',
+    note:'Remarque : Générateur local par défaut. Zhipu GLM-4.5-Flash nécessite un proxy serveur et une clé API.',
+    results:'Noms proposés',
+    copyAll:'Copier tout',
+    exportAll:'Exporter les affiches',
+    footer:'Astuce : utilisez les boutons des cartes pour lire la prononciation, télécharger les images de calligraphie ou copier le contenu.',
+    name:'Nom',
+    pinyin:'Pinyin',
+    styleLabel:'Style',
+    meaningLabel:'Signification',
+    surnameStory:'Histoire du nom de famille',
+    play:'Lire la prononciation',
+    copy:'Copier',
+    exportCard:'Exporter l’image de la carte',
+    share:'Partager',
+    dlKai:'Télécharger Kaishu',
+    dlXing:'Télécharger Xingshu',
+    fontNote:'Police de calligraphie : Ma Shan Zheng (manuscrite)',
+    languageLabel:'Langue',
+    surprise:'Suggestion automatique',
+    subscribe:"S’abonner (membre)",
+    ttsBrowser:'TTS en ligne (navigateur)',
+    ttsBaidu:'Baidu TTS',
+    yourNameLabel:'Votre nom (optionnel)',
+    genderFemale:'Femme',
+    genderMale:'Homme',
+    genderNonbinary:'Non-binaire',
+    styleNames:{
+      elegant:'Élégant et littéraire',
+      gentle:'Doux et chaleureux',
+      powerful:'Puissant et majestueux',
+      scholarly:'Savant et classique',
+      modern:'Moderne et minimal',
+      nature:'Inspiré par la nature',
+      bright:'Lumineux et joyeux',
+      classic:'Classique et traditionnel'
+    },
+    membershipNote:'Membres : générations illimitées. Non‑membres : usage quotidien limité.'
+    ,loadingTip:'Votre nom est façonné avec soin culturel. Merci de patienter…'
+  }
+  ,es:{
+    logo:'Estudio de nombres chinos',
+    subtitle:'Nombres chinos personalizados con base cultural',
+    fill:'Complete sus preferencias',
+    age:'Edad',
+    gender:'Género (selección única)',
+    style:'Estilo del nombre',
+    surname:'Apellido (opcional)',
+    count:'Cantidad',
+    generate:'Generar',
+    note:'Nota: Generador local por defecto. Zhipu GLM-4.5-Flash requiere proxy de servidor y claves API.',
+    results:'Nombres candidatos',
+    copyAll:'Copiar todo',
+    exportAll:'Exportar pósters',
+    footer:'Consejo: use los botones de la tarjeta para reproducir la pronunciación, descargar imágenes de caligrafía o copiar contenido.',
+    name:'Nombre',
+    pinyin:'Pinyin',
+    styleLabel:'Estilo',
+    meaningLabel:'Significado',
+    surnameStory:'Historia del apellido',
+    play:'Reproducir pronunciación',
+    copy:'Copiar',
+    exportCard:'Exportar imagen de la tarjeta',
+    share:'Compartir',
+    dlKai:'Descargar Kaishu',
+    dlXing:'Descargar Xingshu',
+    fontNote:'Tipografía de caligrafía: Ma Shan Zheng (manuscrita)',
+    languageLabel:'Idioma',
+    surprise:'Sugerencia automática',
+    subscribe:'Suscribirse (miembro)',
+    ttsBrowser:'TTS en línea (navegador)',
+    ttsBaidu:'Baidu TTS',
+    yourNameLabel:'Tu nombre (opcional)',
+    genderFemale:'Femenino',
+    genderMale:'Masculino',
+    genderNonbinary:'No binario',
+    styleNames:{
+      elegant:'Elegante y literario',
+      gentle:'Cálido y amable',
+      powerful:'Poderoso y majestuoso',
+      scholarly:'Erudito y clásico',
+      modern:'Moderno y minimalista',
+      nature:'Inspirado en la naturaleza',
+      bright:'Alegre y brillante',
+      classic:'Clásico y tradicional'
+    },
+    membershipNote:'Miembros: generaciones ilimitadas. No miembros: uso diario limitado.'
+    ,loadingTip:'Tu nombre se está creando con cuidado cultural. Espera un momento…'
+  }
+}
+let currentLang='en'
+function applyI18n(){const t=i18nTexts[currentLang];
+  document.getElementById('text-logo').textContent=t.logo
+  document.getElementById('text-subtitle').textContent=t.subtitle
+  document.getElementById('label-lang').textContent=t.languageLabel
+  document.getElementById('text-fill').textContent=t.fill
+  if(document.getElementById('label-age')) document.getElementById('label-age').textContent=t.age
+  if(document.getElementById('label-yourname')) document.getElementById('label-yourname').textContent=t.yourNameLabel||'Your name (optional)'
+  document.getElementById('label-gender').textContent=t.gender
+  document.getElementById('label-style').textContent=t.style
+  if(document.getElementById('label-surname')) document.getElementById('label-surname').textContent=t.surname
+  if(document.getElementById('label-count')) document.getElementById('label-count').textContent=t.count
+  document.getElementById('generate').textContent=t.generate
+  if(document.getElementById('text-note')) document.getElementById('text-note').textContent=t.note
+  const m=document.getElementById('text-membership'); if(m) m.textContent=t.membershipNote||''
+  const surpriseBtnEl=document.getElementById('surprise'); if(surpriseBtnEl) surpriseBtnEl.textContent=t.surprise||'Surprise me (Auto)'
+  const subscribeBtnEl=document.getElementById('subscribe'); if(subscribeBtnEl) subscribeBtnEl.textContent=t.subscribe||'Subscribe (Member)'
+  const ttsSel=document.getElementById('tts');
+  if(ttsSel){
+    const opts=[...ttsSel.options];
+    const baiduOpt=opts.find(o=>o.value==='baidu');
+    const browserOpt=opts.find(o=>o.value==='browser');
+    if(baiduOpt) baiduOpt.textContent=t.ttsBaidu||'Baidu TTS'
+    if(browserOpt) browserOpt.textContent=t.ttsBrowser||'Online TTS (Browser)'
+  }
+  document.getElementById('text-results').textContent=t.results
+  document.getElementById('copyAll').textContent=t.copyAll
+  document.getElementById('exportAll').textContent=t.exportAll
+  document.getElementById('text-footer').textContent=t.footer}
+  ;[...cards.querySelectorAll('.actions-row button[data-role="export"]')].forEach(b=>b.textContent=t.exportCard)
+  ;[...cards.querySelectorAll('.actions-row button[data-role="share"]')].forEach(b=>b.textContent=t.share||'Share')
+langSelect.addEventListener('change',()=>{currentLang=langSelect.value;renderStyleChips();renderGenderChips();applyI18n();})
+
+function toggleChip(e){if(e.target.tagName!=='BUTTON')return;e.target.classList.toggle('active')}
+function singleSelectChip(e){if(e.target.tagName!=='BUTTON')return;[...genderChipGroup.querySelectorAll('button')].forEach(b=>b.classList.remove('active'));e.target.classList.add('active')}
+genderChipGroup.addEventListener('click',singleSelectChip);
+styleChipGroup.addEventListener('click',toggleChip);
+if(surnameChips){surnameChips.addEventListener('click',e=>{if(e.target.tagName!=='BUTTON')return;document.getElementById('surname').value=e.target.dataset.value})}
+
+function collectChips(el){return[...el.querySelectorAll('button.active')].map(b=>b.dataset.value)}
+
+function pick(arr,n){const a=[...arr];const out=[];while(a.length&&out.length<n){out.push(a.splice(Math.floor(Math.random()*a.length),1)[0])}return out}
+
+const styleCatalog=[
+  {id:'elegant',en:'Elegant & Literary',zh:'文艺雅致',descEn:'Graceful, refined, poetic tone',descZh:'优雅、精致、富有诗意的气质',chars:['安','晴','悦','澜','舟','墨','朵','岚','初','念','予','然','夏','桐','溪','绮']},
+  {id:'gentle',en:'Gentle & Warm',zh:'温柔暖意',descEn:'Soft, warm, friendly',descZh:'柔和、温暖、亲切',chars:['柔','宁','婉','娴','瑶','莹','沐','沁','悠','和','彤','静','语','雅','芷','素','清','怡','慧']},
+  {id:'powerful',en:'Powerful & Majestic',zh:'威武霸气',descEn:'Strong, bold, commanding',descZh:'力量感强、气场足',chars:['霆','龙','轩','擎','昊','岳','磊','锋','傲','烈','御','戎','桀','澈','凌','铠','沧','玄','狂','霸']},
+  {id:'scholarly',en:'Scholarly & Classical',zh:'文人古典',descEn:'Bookish, classical taste',descZh:'书卷气、古典审美',chars:['风','清','玄','远','之','白','卿','渊','野','川','言','墨','辞','云','无','行','一','然','初']},
+  {id:'modern',en:'Modern & Minimal',zh:'现代简约',descEn:'Clean, minimal, contemporary',descZh:'简洁、现代、干净',chars:['简','宁','素','白','清','然','一','安','知','朴','行','羽','希','远']},
+  {id:'nature',en:'Nature-inspired',zh:'自然清新',descEn:'Nature imagery, fresh',descZh:'自然意象、清新',chars:['林','森','川','溪','岚','风','雨','露','青','竹','荷','梅','柳','泉']},
+  {id:'bright',en:'Bright & Cheerful',zh:'明朗愉悦',descEn:'Lively, cheerful',descZh:'活泼、愉悦、明朗',chars:['悦','笑','乐','明','晴','灿','辉','朗','吟','歌','欣','欢']},
+  {id:'classic',en:'Classic & Traditional',zh:'经典传统',descEn:'Traditional cultural flavor',descZh:'传统文化底蕴',chars:['忠','仁','义','礼','智','信','德','文','礼','清','雅','和']}
+]
+function renderStyleChips(){styleChipGroup.innerHTML='';const t=i18nTexts[currentLang];const names=t.styleNames||{};styleCatalog.forEach(s=>{const b=document.createElement('button');b.type='button';b.dataset.value=s.id;const label=names[s.id]||(currentLang==='zh'?s.zh:s.en);b.textContent=label;b.title=currentLang==='zh'?s.descZh:s.descEn;styleChipGroup.appendChild(b)})}
+function renderGenderChips(){const t=i18nTexts[currentLang];const map={female:t.genderFemale||'Female',male:t.genderMale||'Male',nonbinary:t.genderNonbinary||'Non-binary'};genderChipGroup.innerHTML='';['female','male','nonbinary'].forEach(v=>{const b=document.createElement('button');b.type='button';b.dataset.value=v;b.textContent=map[v];genderChipGroup.appendChild(b)})}
+
+const commonSurnames=['李','王','张','刘','陈','杨','赵','黄','周','吴','林','徐','孙','朱','马','胡','郭','何','高','罗']
+
+const charPinyin={
+  '筝':'zhēng',
+  '李':'lǐ','王':'wáng','张':'zhāng','刘':'liú','陈':'chén','杨':'yáng','赵':'zhào','黄':'huáng','周':'zhōu','吴':'wú','林':'lín','徐':'xú','孙':'sūn','朱':'zhū','马':'mǎ','胡':'hú','郭':'guō','何':'hé','高':'gāo','罗':'luó',
+  '安':'ān','晴':'qíng','悦':'yuè','乔':'qiáo','澜':'lán','舟':'zhōu','墨':'mò','朵':'duǒ','岚':'lán','初':'chū','念':'niàn','疏':'shū','予':'yǔ','然':'rán','夏':'xià','桐':'tóng','溪':'xī','绮':'qǐ',
+  '柔':'róu','宁':'níng','婉':'wǎn','娴':'xián','瑶':'yáo','莹':'yíng','沐':'mù','沁':'qìn','悠':'yōu','和':'hé','彤':'tóng','静':'jìng','语':'yǔ','雅':'yǎ','茜':'qiàn','芷':'zhǐ','素':'sù','清':'qīng','怡':'yí','慧':'huì',
+  '霆':'tíng','龙':'lóng','轩':'xuān','擎':'qíng','昊':'hào','岳':'yuè','磊':'lěi','锋':'fēng','傲':'ào','烈':'liè','御':'yù','戎':'róng','桀':'jié','澈':'chè','凌':'líng','铠':'kǎi','沧':'cāng','玄':'xuán','狂':'kuáng','霸':'bà',
+  '风':'fēng','远':'yuǎn','之':'zhī','白':'bái','卿':'qīng','渊':'yuān','野':'yě','川':'chuān','言':'yán','辞':'cí','云':'yún','无':'wú','行':'xíng','一':'yī'
+}
+
+function toPinyin(name){return name.split('').map(ch=>charPinyin[ch]||ch).join(' ')}
+
+function surnameInfo(s){
+  const m={
+    '李':{origin:'出自嬴姓与姬姓等多源，广泛分布',meaning:'李字寓意木子成熟，象征丰收',figure:'李白，盛唐诗人，浪漫主义代表'},
+    '王':{origin:'源自姬姓，封王者后裔，姓氏人口最多之一',meaning:'王寓意尊贵与领导力',figure:'王羲之，东晋书法家，行草典范'},
+    '张':{origin:'源自姬姓，弓长为张，武职起家',meaning:'张寓意开张、展开',figure:'张仲景，医圣，著《伤寒杂病论》'},
+    '刘':{origin:'源自祁姓，汉高祖刘邦后裔广布',meaning:'刘寓意勇武与豪迈',figure:'刘备，蜀汉帝，仁义名著'},
+    '林':{origin:'比干之后为林氏，亦有居于林为氏',meaning:'林寓意生机与自然',figure:'林则徐，近代政治家，虎门销烟'}
+  }
+  return m[s]||{origin:'常见汉族姓氏之一，历史悠久',meaning:'寓意积极向上',figure:'历史人物众多，可参考百科条目'}
+}
+
+function guessStyleFromName(n){if(!n)return null;const s=n.toLowerCase();if(/[xzkwv]/.test(s))return 'powerful';if(/[leaioy]/.test(s))return 'gentle';if(/[mnr]/.test(s))return 'elegant';return 'modern'}
+function localGenerate({age,genders,styles,surname,count,yourName}){
+  const chosenSurname=(toChineseSurname(surname)||'')||pick(commonSurnames,1)[0]
+  const styleId=styles[0]||guessStyleFromName(yourName)||styleCatalog[Math.floor(Math.random()*styleCatalog.length)].id
+  const styleDef=styleCatalog.find(s=>s.id===styleId)||styleCatalog[0]
+  const pool=styleDef.chars
+  const res=[]
+  for(let i=0;i<count;i++){
+    const first=pick(pool,1)[0]
+    const second=pick(pool.filter(c=>c!==first),1)[0]
+    const full=chosenSurname+first+second
+    res.push({
+      name:full,
+      pinyin:toPinyin(full),
+      style:currentLang==='en'?styleDef.en:styleDef.zh,
+      meaning:currentLang==='en'?styleDef.descEn:styleDef.descZh,
+      surname:chosenSurname,
+      surnameInfo:surnameInfo(chosenSurname)
+    })
+  }
+  return res
+}
+
+async function callProvider(payload){
+    const r=await fetch(`${API_BASE}/api/generate`,{method:'POST',headers:{'Content-Type':'application/json','X-Member':(localStorage.getItem('member')==='true'?'true':'false')},body:JSON.stringify(payload)})
+    if(!r.ok) throw new Error('upstream_'+r.status)
+    const text=await r.text()
+    let j
+    try{j=JSON.parse(text)}catch(e){throw new Error('invalid_json')}
+    let arr=[]
+    if(Array.isArray(j)){
+      arr=j
+    }else if(j && j.data){
+      arr=Array.isArray(j.data)?j.data:[j.data]
+    }else if(j && j.series && j.series.result){
+      const res=j.series.result
+      const d=res.data!==undefined?res.data:res
+      arr=Array.isArray(d)?d:[d]
+    }
+    arr=arr.map(it=>({
+      name: it.name||'',
+      pinyin: toPinyin(it.name||''),
+      style: it.style||'Modern & Minimal',
+      meaning: it.meaning||'',
+      surnameInfo: {story: it.story||''}
+    }))
+    if(!arr.length) throw new Error('empty')
+    return arr
+  }
+
+function speak(text){
+  const ttsSel=document.getElementById('tts').value
+  const zhRegex=/^[\u4e00-\u9fa5·]{1,6}$/
+  if(ttsSel==='browser'){
+    try{const u=new SpeechSynthesisUtterance(text);u.lang='zh-CN';speechSynthesis.speak(u)}catch(e){}
+    return
+  }
+  if(ttsSel==='baidu'&&!zhRegex.test(text)){
+    try{const u=new SpeechSynthesisUtterance(text);u.lang='zh-CN';speechSynthesis.speak(u)}catch(e){}
+    return
+  }
+  const per=0;
+  const spd=4;
+  fetch(`${API_BASE}/api/tts?provider=${encodeURIComponent(ttsSel)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,lang:'zh-CN',per,spd})})
+    .then(r=>r.ok?r.blob():Promise.reject('tts error'))
+    .then(blob=>{const url=URL.createObjectURL(blob);const audio=new Audio(url);audio.play()})
+    .catch(()=>{try{const u=new SpeechSynthesisUtterance(text);u.lang='zh-CN';speechSynthesis.speak(u)}catch(e){}})
+}
+
+function renderCalligraphy(canvas,text,font,px=64,sx=1){
+  const dpr=window.devicePixelRatio||1
+  const w=canvas.clientWidth
+  const h=canvas.clientHeight
+  canvas.width=w*dpr
+  canvas.height=h*dpr
+  const ctx=canvas.getContext('2d')
+  ctx.scale(dpr,dpr)
+  ctx.fillStyle='#fafafa'
+  ctx.fillRect(0,0,w,h)
+  ctx.fillStyle='#0f172a'
+  ctx.textAlign='center'
+  ctx.textBaseline='middle'
+  ctx.font=`${px}px "${font}"`
+  ctx.save()
+  ctx.translate(w/2,h/2)
+  ctx.scale(sx,1)
+  ctx.fillText(text,0,0)
+  ctx.restore()
+}
+
+let fontsReady=false
+let fontKai='Noto Serif SC'
+let fontXing='Ma Shan Zheng'
+function ensureFonts(){
+  if(fontsReady) return Promise.resolve()
+  const kai=document.fonts.load('72px "'+fontKai+'"')
+  const xing=document.fonts.load('72px "'+fontXing+'"')
+  return Promise.all([kai,xing]).then(()=>{fontsReady=true}).catch(()=>{fontsReady=true})
+}
+
+function cardToText(d){const t=i18nTexts[currentLang];
+  const combinedMeaning = d.nameInsight ? `${d.meaning}；${d.nameInsight}` : d.meaning
+  const storyText = (d.surnameInfo && d.surnameInfo.story) ? d.surnameInfo.story : (d.surnameInfo.origin||'')
+  return `${t.name}：${d.name}\n${t.pinyin}：${d.pinyin}\n${t.styleLabel}：${d.style}\n${t.meaningLabel}：${combinedMeaning}\n${t.surnameStory}：${storyText}`}
+
+function createCard(d){
+  const c=document.createElement('div');c.className='name-card bg-accent';c.setAttribute('data-name',d.name)
+  c.classList.add('accent-'+resolveStyleId(d.style))
+  const header=document.createElement('div');header.className='name-header'
+  const title=document.createElement('div');title.className='name-title';title.textContent=d.name
+  const pinyin=document.createElement('div');pinyin.className='pinyin';pinyin.textContent=`(${d.pinyin})`
+  const t=i18nTexts[currentLang]
+  const playInline=document.createElement('button');playInline.className='inline-btn';playInline.textContent=t.play;playInline.onclick=()=>speak(d.name)
+  const panda=document.createElement('img');panda.src='assets/panda.svg';panda.alt='panda';panda.className='inline-icon'
+  pinyin.appendChild(playInline)
+  pinyin.appendChild(panda)
+  header.appendChild(title);header.appendChild(pinyin)
+  const meta=document.createElement('div');meta.className='meta';meta.textContent=`${t.styleLabel}：${d.style}`
+  const combinedMeaning = d.nameInsight ? `${d.meaning}；${d.nameInsight}` : d.meaning
+  const meaning=document.createElement('div');meaning.className='meaning';meaning.textContent=`${t.meaningLabel}：${combinedMeaning}`
+  if(d.pronounce_hint){const hint=document.createElement('div');hint.className='meaning';hint.textContent=`发音提示：${d.pronounce_hint}`;c.appendChild(hint)}
+  const storyTextRaw = (d.surnameInfo && d.surnameInfo.story) ? d.surnameInfo.story : (d.surnameInfo.origin||'')
+  const storyText = formatStoryText(storyTextRaw)
+  const story=document.createElement('div');story.className='story';story.textContent=`${t.surnameStory}：${storyText}`
+  const actionsRow=document.createElement('div');actionsRow.className='actions-row'
+  const calligraphy=document.createElement('div');calligraphy.className='calligraphy'
+  const xingshu=document.createElement('canvas')
+  calligraphy.appendChild(xingshu)
+  c.appendChild(header);c.appendChild(meta);c.appendChild(meaning);c.appendChild(story);c.appendChild(actionsRow);c.appendChild(calligraphy)
+  requestAnimationFrame(()=>{ensureFonts().then(()=>{renderCalligraphy(xingshu,d.name,fontXing,72,1)})})
+  const small=document.createElement('div');small.className='small';small.textContent=t.fontNote+` | Using: ${fontXing}`
+  c.appendChild(small)
+  const dlRow=document.createElement('div');dlRow.className='actions-row'
+  const exportBtn=document.createElement('button');exportBtn.textContent=t.exportCard;exportBtn.dataset.role='export';exportBtn.onclick=()=>{const payload=collectDataFromCard(c);exportCardImage(payload,c)}
+  const shareBtn=document.createElement('button');shareBtn.textContent=t.share||'Share';shareBtn.dataset.role='share';shareBtn.onclick=()=>{const payload=collectDataFromCard(c);shareCardImage(payload,c)}
+  dlRow.appendChild(exportBtn)
+  dlRow.appendChild(shareBtn)
+  c.appendChild(dlRow)
+  return c
+}
+
+function downloadCanvas(canvas,filename){const url=canvas.toDataURL('image/png');downloadImage(url,filename)}
+function downloadImage(url,filename){const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove()}
+
+async function doGenerate(){
+  showLoading(true)
+  const genders=collectChips(genderChipGroup)
+  const styles=collectChips(styleChipGroup)
+  const yourName=document.getElementById('yourName').value.trim()
+  const count=2
+  cards.innerHTML=''
+  try{
+    const data=await callProvider({genders,styles,count,yourName,lang:currentLang})
+    data.forEach(d=>cards.appendChild(createCard(d)))
+  }catch(e){
+    showError(e.message)
+  }finally{showLoading(false)}
+}
+
+form.addEventListener('submit',async e=>{e.preventDefault();doGenerate()})
+document.getElementById('generate').addEventListener('click',async e=>{e.preventDefault();doGenerate()})
+
+// removed bulk copy/export actions
+
+function showLoading(flag){
+  const el=document.getElementById('loading');
+  if(el){
+    el.style.display=flag?'inline-block':'none';
+    const msg=document.getElementById('loadingMsg');
+    if(msg&&flag){const t=i18nTexts[currentLang];msg.textContent=t.loadingTip||'Crafting your name. Please wait…'}
+    if(flag){
+      try{
+        el.scrollIntoView({behavior:'smooth',block:'center'});
+        // 兜底：再触发一次，以防首次被布局延迟
+        setTimeout(()=>{try{el.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}},150);
+        // 兜底2：直接滚动窗口到元素附近
+        const rect=el.getBoundingClientRect();
+        if(rect.top>window.innerHeight||rect.top<0){window.scrollTo({top:window.pageYOffset+rect.top-100,behavior:'smooth'})}
+      }catch(e){}
+    }
+  }
+  const gen=document.getElementById('generate');
+  if(gen) gen.disabled=flag;
+  const sur=document.getElementById('surprise');
+  if(sur) sur.disabled=flag;
+}
+// PayPal subscribe (render on click)
+subscribeBtn.addEventListener('click',async()=>{
+  try{
+    const cfg=await (await fetch(`${API_BASE}/api/paypal/config`)).json()
+    if(!cfg.enabled){alert('PayPal not configured');return}
+    let cont=document.getElementById('paypal-container');
+    if(!cont){cont=document.createElement('div');cont.id='paypal-container';cont.style='position:fixed;right:24px;bottom:24px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:12px;z-index:20';document.body.appendChild(cont)}
+    if(!window.paypal){const s=document.createElement('script');s.src=`https://www.paypal.com/sdk/js?client-id=${cfg.client_id}&vault=true&intent=subscription`;document.body.appendChild(s);await new Promise(res=>{s.onload=res})}
+    cont.innerHTML=''
+    window.paypal.Buttons({
+      style:{layout:'vertical',color:'blue',shape:'pill',label:'subscribe'},
+      createSubscription: function(data, actions){return actions.subscription.create({plan_id: cfg.plan_id})},
+      onApprove: async function(data){await fetch(`${API_BASE}/api/member/activate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subscription_id:data.subscriptionID})});alert('Membership activated');refreshMemberUI();}
+    }).render('#paypal-container')
+  }catch(e){alert('Subscribe failed')}
+})
+
+// initial member UI state
+refreshMemberUI()
+
+function showError(msg){const d=document.createElement('div');d.className='small';const zhMap={empty:'未返回候选名字，请稍后重试或更换风格。',invalid_json:'返回数据无法解析，请重试。'};d.textContent=(currentLang==='zh'? (zhMap[msg]||'生成失败，请稍后重试。') : 'Generation failed. Please retry.');cards.appendChild(d)}
+
+subscribeBtn.addEventListener('click',async()=>{
+  const cfg = await fetch(`${API_BASE}/api/paypal/config`).then(r=>r.json())
+  const box = document.getElementById('paypalButtons');
+  if(!cfg.enabled){alert('PayPal 未配置，部署后可在服务器环境变量中启用');return}
+  box.style.display='block'
+  if(!window.paypal){
+    const s=document.createElement('script');
+    s.src=`https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(cfg.client_id)}&vault=true&intent=subscription`;
+    s.onload=()=>renderPayPal(cfg.plan_id);
+    document.body.appendChild(s);
+  }else{
+    renderPayPal(cfg.plan_id)
+  }
+})
+
+function renderPayPal(planId){
+  window.paypal.Buttons({
+    style:{layout:'vertical',color:'blue',shape:'rect',label:'subscribe'},
+    createSubscription:(data,actions)=>actions.subscription.create({plan_id:planId}),
+    onApprove:async (data)=>{
+      await fetch(`${API_BASE}/api/member/activate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subscription_id:data.subscriptionID})})
+      localStorage.setItem('member','true')
+      alert('Subscription activated. You are now a member.')
+    },
+    onError:(err)=>{alert('PayPal error')}
+  }).render('#paypalButtons')
+}
+
+function collectDataFromCard(card){
+  const name=card.getAttribute('data-name')
+  const pEl=card.querySelector('.pinyin')
+  let pinyin=''
+  if(pEl){
+    const first=pEl.firstChild
+    pinyin=(first&&first.textContent?first.textContent:first&&first.nodeValue?first.nodeValue:'').trim()
+  }
+  const t=i18nTexts[currentLang]
+  const styleText=(card.querySelector('.meta')?.textContent||'').replace(`${t.styleLabel}：`,'')
+  const meaningEl=card.querySelector('.meaning')
+  const meaningText=(meaningEl?.textContent||'').replace(`${t.meaningLabel}：`,'')
+  const storyEl=card.querySelector('.story')
+  let storyText=(storyEl?.textContent||'')
+  storyText=storyText.replace(new RegExp('^'+(t.surnameStory||'Surname Story')+'\s*[:：]\s*'),'')
+  storyText=storyText.replace(/^(Surname\s*Story|姓氏故事|故事)\s*[:：]\s*/,'')
+  return {name,pinyin,style:styleText,meaning:meaningText,story:storyText}
+}
+
+function exportCardImage(d,card){
+  const canvas=document.createElement('canvas')
+  const dpr=window.devicePixelRatio||2
+  const w=800
+  const h=800
+  canvas.width=w*dpr
+  canvas.height=h*dpr
+  const ctx=canvas.getContext('2d')
+  ctx.scale(dpr,dpr)
+  ctx.fillStyle='#eef2ff'
+  ctx.fillRect(0,0,w,h)
+  // card panel with rounded corners and shadow
+  const panelX=24, panelY=24, panelW=w-48, panelH=h-48, r=18
+  ctx.fillStyle='rgba(16,24,40,0.08)'
+  drawRoundedRect(ctx,panelX+6,panelY+8,panelW,panelH,r)
+  ctx.fill()
+  ctx.fillStyle='#aa96da'
+  ctx.strokeStyle='rgba(229,231,235,0.8)'
+  ctx.lineWidth=1
+  drawRoundedRect(ctx,panelX,panelY,panelW,panelH,r)
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle='#0f172a'
+  ctx.textAlign='left'
+  ctx.textBaseline='top'
+  // Title
+  ctx.font='bold 44px Noto Serif SC'
+  ctx.fillText(d.name,panelX+16,panelY+16)
+  // Pinyin
+  ctx.font='22px Noto Sans'
+  ctx.fillStyle='#475467'
+  ctx.fillText(d.pinyin,panelX+16,panelY+70)
+  // Panda icon after pinyin
+  const pinWidth=ctx.measureText(d.pinyin||'').width
+  const panda=new Image();
+  panda.src='assets/panda.svg'
+  // Style & Meaning
+  ctx.fillStyle='#101828'
+  const t=i18nTexts[currentLang]
+  // unified subtitle style
+  const subtitleFont='bold 20px Noto Sans'
+  const bodyFont='18px Noto Sans'
+  // Style (subtitle on its own line, content starts at left margin)
+  ctx.font=subtitleFont
+  ctx.fillText(t.styleLabel+'：',panelX+16,panelY+110)
+  let textTop = panelY+136
+  ctx.font=bodyFont
+  textTop = drawMultilineReturnBottom(ctx,d.style||'',panelX+16,textTop,panelW-32,26) + 10
+  // Meaning
+  ctx.font=subtitleFont
+  ctx.fillText(t.meaningLabel+'：',panelX+16,textTop)
+  textTop += 26
+  ctx.font=bodyFont
+  const meaningText=(d.nameInsight ? `${d.meaning}；${d.nameInsight}` : d.meaning) || ''
+  textTop = drawMultilineReturnBottom(ctx,meaningText,panelX+16,textTop,panelW-32,26) + 10
+  // Story (formatted)
+  ctx.font=subtitleFont
+  ctx.fillText(t.surnameStory+'：',panelX+16,textTop)
+  textTop += 26
+  ctx.font=bodyFont
+  let y=textTop
+  const storySrc = d.story || (d.surnameInfo && d.surnameInfo.story) || ''
+  const formattedStory=formatStoryText(storySrc)
+  y = drawMultilineReturnBottom(ctx,formattedStory,panelX+16,y,panelW-32,24) + 20
+  const cv=card.querySelector('canvas')
+  const xing=cv.toDataURL('image/png')
+  const img=new Image()
+  let loaded=0
+  function done(){loaded++;if(loaded===2){downloadImage(canvas.toDataURL('image/png'),`${d.name}-card.png`)}}
+  panda.onload=()=>{ctx.drawImage(panda,panelX+16+pinWidth+24,panelY+52,48,48);done()}
+  panda.onerror=()=>done()
+  img.onload=()=>{
+    const naturalW=img.width, naturalH=img.height
+    const targetH=200
+    let targetW=Math.round(targetH*(naturalW/naturalH))
+    if(targetW>panelW-32) targetW=panelW-32
+    const dx = panelX+16 + ((panelW-32)-targetW)/2
+    const cropX = Math.round(naturalW*0.05)
+    const sW = naturalW - cropX*2
+    ctx.drawImage(img,cropX,0,sW,naturalH,dx,y,targetW,targetH)
+    done()
+  }
+  img.src=xing
+}
+
+async function shareCardImage(d,card){
+  const canvas=document.createElement('canvas')
+  const dpr=window.devicePixelRatio||2
+  const w=800
+  const h=800
+  canvas.width=w*dpr
+  canvas.height=h*dpr
+  const ctx=canvas.getContext('2d')
+  ctx.scale(dpr,dpr)
+  ctx.fillStyle='#eef2ff'
+  ctx.fillRect(0,0,w,h)
+  const panelX=24, panelY=24, panelW=w-48, panelH=h-48, r=18
+  ctx.fillStyle='rgba(16,24,40,0.08)'
+  drawRoundedRect(ctx,panelX+6,panelY+8,panelW,panelH,r)
+  ctx.fill()
+  ctx.fillStyle='#aa96da'
+  ctx.strokeStyle='rgba(229,231,235,0.8)'
+  ctx.lineWidth=1
+  drawRoundedRect(ctx,panelX,panelY,panelW,panelH,r)
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle='#0f172a'
+  ctx.textAlign='left'
+  ctx.textBaseline='top'
+  ctx.font='bold 44px Noto Serif SC'
+  ctx.fillText(d.name,panelX+16,panelY+16)
+  ctx.font='22px Noto Sans'
+  ctx.fillStyle='#475467'
+  ctx.fillText(d.pinyin,panelX+16,panelY+70)
+  const pinWidth=ctx.measureText(d.pinyin||'').width
+  const panda=new Image();panda.src='assets/panda.svg'
+  ctx.fillStyle='#101828'
+  const t=i18nTexts[currentLang]
+  const subtitleFont='bold 20px Noto Sans'
+  const bodyFont='18px Noto Sans'
+  ctx.font=subtitleFont
+  ctx.fillText(t.styleLabel+'：',panelX+16,panelY+110)
+  let textTop = panelY+136
+  ctx.font=bodyFont
+  textTop = drawMultilineReturnBottom(ctx,d.style||'',panelX+16,textTop,panelW-32,26) + 10
+  ctx.font=subtitleFont
+  ctx.fillText(t.meaningLabel+'：',panelX+16,textTop)
+  textTop += 26
+  ctx.font=bodyFont
+  const meaningText=(d.nameInsight ? `${d.meaning}；${d.nameInsight}` : d.meaning) || ''
+  textTop = drawMultilineReturnBottom(ctx,meaningText,panelX+16,textTop,panelW-32,26) + 10
+  ctx.font=subtitleFont
+  ctx.fillText(t.surnameStory+'：',panelX+16,textTop)
+  textTop += 26
+  ctx.font=bodyFont
+  let y=textTop
+  const storySrc = d.story || (d.surnameInfo && d.surnameInfo.story) || ''
+  const formattedStory=formatStoryText(storySrc)
+  y = drawMultilineReturnBottom(ctx,formattedStory,panelX+16,y,panelW-32,24) + 20
+  const cv=card.querySelector('canvas')
+  const xing=cv.toDataURL('image/png')
+  const img=new Image()
+  await new Promise(resolve=>{panda.onload=resolve;panda.onerror=resolve})
+  ctx.drawImage(panda,panelX+16+pinWidth+24,panelY+52,48,48)
+  await new Promise(resolve=>{img.onload=resolve;img.src=xing})
+  const naturalW=img.width, naturalH=img.height
+  const targetH=200
+  let targetW=Math.round(targetH*(naturalW/naturalH))
+  if(targetW>panelW-32) targetW=panelW-32
+  const dx = panelX+16 + ((panelW-32)-targetW)/2
+  const cropX = Math.round(naturalW*0.05)
+  const sW = naturalW - cropX*2
+  ctx.drawImage(img,cropX,0,sW,naturalH,dx,y,targetW,targetH)
+  const blob=await new Promise(res=>canvas.toBlob(b=>res(b),'image/png'))
+  const file=new File([blob],`${d.name}-card.png`,{type:'image/png'})
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title:d.name})}catch(e){}
+  }else{
+    const url=URL.createObjectURL(blob)
+    downloadImage(url,`${d.name}-card.png`)
+    URL.revokeObjectURL(url)
+  }
+}
+
+function drawMultiline(ctx,text,x,y,maxWidth,lineHeight){
+  const words=[...text]
+  let line=''
+  let yy=y
+  for(let i=0;i<words.length;i++){
+    const ch=words[i]
+    if(ch==='\n'){ctx.fillText(line,x,yy);line='';yy+=lineHeight;continue}
+    const test=line+ch
+    const w=ctx.measureText(test).width
+    if(w>maxWidth&&i>0){ctx.fillText(line,x,yy);line=words[i];yy+=lineHeight}else{line=test}
+  }
+  ctx.fillText(line,x,yy)
+}
+
+function drawMultilineReturnBottom(ctx,text,x,y,maxWidth,lineHeight){
+  const words=[...text]
+  let line=''
+  let yy=y
+  for(let i=0;i<words.length;i++){
+    const ch=words[i]
+    if(ch==='\n'){ctx.fillText(line,x,yy);line='';yy+=lineHeight;continue}
+    const test=line+ch
+    const w=ctx.measureText(test).width
+    if(w>maxWidth&&i>0){ctx.fillText(line,x,yy);line=words[i];yy+=lineHeight}else{line=test}
+  }
+  ctx.fillText(line,x,yy)
+  return yy+lineHeight
+}
+
+function drawRoundedRect(ctx,x,y,w,h,r){
+  ctx.beginPath()
+  ctx.moveTo(x+r,y)
+  ctx.arcTo(x+w,y,x+w,y+h,r)
+  ctx.arcTo(x+w,y+h,x,y+h,r)
+  ctx.arcTo(x,y+h,x,y,r)
+  ctx.arcTo(x,y,x+w,y,r)
+  ctx.closePath()
+}
+
+function formatStoryText(text){
+  if(!text) return ''
+  return String(text).replace(/([。！？?!])/g,'$1\n').replace(/\n+/g,'\n').trim()
+}
+
+renderStyleChips();
+renderGenderChips();
+applyI18n();
+function toChineseSurname(input){if(!input)return '';
+  const map={lin:'林',wang:'王',li:'李',zhang:'张',liu:'刘',chen:'陈',yang:'杨',zhao:'赵',huang:'黄',zhou:'周',wu:'吴',xu:'徐',sun:'孙',zhu:'朱',ma:'马',hu:'胡',guo:'郭',he:'何',gao:'高',luo:'罗'}
+  const s=input.trim().toLowerCase()
+  return map[s]||input
+}
+if(surpriseBtn){
+  surpriseBtn.addEventListener('click',async()=>{
+    const count=2
+    const data=await callProvider({genders:[],styles:[],count,lang:currentLang})
+    cards.innerHTML=''
+    data.forEach(d=>cards.appendChild(createCard(d)))
+  })
+}
+function normalizeText(s){return String(s||'').toLowerCase().trim()}
+function resolveStyleId(txt){const v=normalizeText(txt);const names={};Object.keys(i18nTexts).forEach(lang=>{const sn=i18nTexts[lang].styleNames||{};Object.keys(sn).forEach(id=>{if(!names[id]) names[id]=[];names[id].push(normalizeText(sn[id]))})});styleCatalog.forEach(s=>{if(!names[s.id]) names[s.id]=[];names[s.id].push(normalizeText(s.en));names[s.id].push(normalizeText(s.zh))});for(const id in names){if(names[id].some(x=>x===v)) return id}return 'modern'}
+async function refreshMemberUI(){
+  try{
+    const r=await fetch(`${API_BASE}/api/member/status`)
+    const j=await r.json()
+    const isMember=(j.is_member!==undefined?j.is_member:j.member)!==undefined? (j.is_member||j.member) : (j.series&&j.series.result&&j.series.result.is_member||false)
+    localStorage.setItem('member', isMember?'true':'false')
+    ;[...cards.querySelectorAll('.actions-row button[data-role="export"], .actions-row button[data-role="share"]')]
+      .forEach(b=>{b.disabled=!isMember; b.title=!isMember? (i18nTexts[currentLang].subscribe||'Subscribe (Member)') : ''})
+  }catch(e){}
+}
