@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chinese Name Maker</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="container">
+        <h1 class="logo" id="text-logo">Chinese Name Maker</h1>
+        <div class="header-row">
+          <p class="subtitle" id="text-subtitle">Custom Chinese names for global users</p>
+          <div class="header-actions">
+            <label for="lang" id="label-lang">Language</label>
+            <select id="lang">
+              <option value="en" selected>English</option>
+              <option value="zh">中文</option>
+              <option value="de">Deutsch</option>
+              <option value="ru">Русский</option>
+              <option value="ja">日本語</option>
+              <option value="ko">한국어</option>
+              <option value="fr">Français</option>
+              <option value="es">Español</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </header>
+    <main class="container">
+      <section class="card">
+        <h2 class="section-title" id="text-fill">Fill Your Preferences</h2>
+        <form id="form" class="form">
+          <div class="field">
+            <label id="label-yourname">Your name (optional)</label>
+            <input type="text" id="yourName" placeholder="e.g. John Smith" />
+          </div>
+
+          <div class="group" id="group-gender">
+            <div class="field">
+              <label id="label-gender">Gender (multi-select)</label>
+              <div class="chips" id="genders">
+                <button type="button" data-value="female">Female</button>
+                <button type="button" data-value="male">Male</button>
+                <button type="button" data-value="nonbinary">Non-binary</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label id="label-style">Name style</label>
+            <div class="chips" id="styles"></div>
+          </div>
+          <div class="actions-top">
+            <select id="tts">
+              <option value="baidu" selected>Baidu TTS</option>
+              <option value="browser">Online TTS (Browser)</option>
+            </select>
+          </div>
+          <div class="actions-bottom">
+            <button id="generate" type="submit">Generate</button>
+            <button id="subscribe" type="button">Subscribe (Member)</button>
+          </div>
+          <p class="note" id="text-membership"></p>
+        </form>
+      </section>
+
+      <section class="results">
+        <div class="results-header">
+          <h2 class="section-title" id="text-results">Name Candidates</h2>
+        </div>
+        <div id="loading" class="loading" style="display:none">Generating… <span class="spinner"></span><div id="loadingMsg" class="loading-msg"></div></div>
+        <div id="cards" class="cards"></div>
+        <div id="paypalButtons" class="paypal-box" style="display:none"></div>
+      </section>
+    </main>
+
+    <footer class="footer container">
+      <p id="text-footer">Tip: Use card buttons to play pronunciation, download calligraphy images, or copy content.</p>
+    </footer>
+
+    <script>window.API_BASE='https://api.your-backend.example.com'</script>
+    <script src="app.js"></script>
+  </body>
+  </html>
